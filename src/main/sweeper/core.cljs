@@ -1,98 +1,117 @@
 (ns sweeper.core
-  (:require [sweeper.board :refer [mine]]))
+  (:require [sweeper.board :refer [mine]]
+            [sweeper.util :as ht]
+            [reagent.core :as r]
+            [reagent.dom :as rdom]))
 
 
 (defn initFn []
   (println "hello initFn"))
 
 
-(defn setStyle [elem style]
-  (set! (.-style elem) style))
+(def myDiv (ht/getElem "divRoot"))
 
-(defn setClass [elem class]
-  (println "setting class" class "on element" elem)
-  (set! (.-className elem) class))
+(def newElem (ht/createElem "div"))
 
-(def dBody(.-body js/document))
-
-(defn getElem [id]
-  (.getElementById js/document id))
-
-(defn createElem [id]
-  (.createElement js/document id))
-
-(defn changeId [element newId]
-  (set! (.-id element) newId))
-
-(def myDiv (getElem "divRoot"))
-
-(def newElem (createElem "div"))
-
-(defn appendElem [child parent]
-  (.appendChild parent child))
 
 (set! (.-id myDiv) "root2")
 
-(changeId myDiv "root5")
-(changeId newElem "myNewElement")
-(appendElem newElem dBody)
+(ht/changeId myDiv "root5")
+;(changeId newElem "myNewElement")
+(ht/appendElem newElem ht/dBody)
 
 
 (defn createTable [id]
-  (let [t (createElem "table")
-        tbody (createElem "tbody")]
-    (changeId t id)
-    (appendElem tbody t)
+  (let [t (ht/createElem "table")
+        tbody (ht/createElem "tbody")]
+    (ht/changeId t id)
+    (ht/appendElem tbody t)
     t))
 
 
 (defn addc [row id]
-  (let [c (createElem "td")] 
+  (let [c (ht/createElem "td")] 
     (-> c 
-        (appendElem row) 
-        (changeId id))
+        (ht/appendElem row) 
+        (ht/changeId id))
     c))
 
 
-(defn setText [elem text]
-  (set! (.-innerHTML elem) text))
 
 (defn addCell
   ([row id] (addc row id))
   ([row id content]
    (-> (addc row id)
-       (setText content)))
+       (ht/setText content)))
   ([row id content class]
    (let [c (addc row id)] 
-     (setText c content)
-     (setClass c class)
-     c)))
+     (ht/setText c content)
+     (ht/setClass c class)
+     c))
+   ([row id content class callback]
+    (let [c (addc row id)]
+      (ht/setText c content)
+      (ht/setClass c class)
+      (ht/setOnClick c callback)
+      c)))
 
 
 (defn addRow [table id] 
   (let [tbody (.-firstChild table)
-        tr (createElem "tr")]
-    (appendElem tr tbody)
-    (changeId tr id)
+        tr (ht/createElem "tr")]
+    (ht/appendElem tr tbody)
+    (ht/changeId tr id)
     tr))
 
 
+(defn createNcells [root r]
+  (repeat r (addCell
+             root
+             (str "1" "mycell")
+             (str "2" "mycells")
+             "button")))
+
+; not sure why, but clojure did not seem to like repeat
+; when adding elements
+(defn createXcells [root x callback]
+  (loop [n x]
+    (if (< n 1) 
+      n 
+      (let [_ (addCell
+               root
+               (str :C n)
+               (str :C n)
+               "button has-background-grey is-primary"
+               callback) 
+            nextIter (- n 1)] 
+        (recur nextIter)))))
+
+(defn createXrowsWithNcells [root x ncells callback]
+  (loop [n x]
+    (if (< n 1)
+      n
+      (let [r (addRow root (str :R n))
+            _ (createXcells r ncells callback)
+            nextIter (- n 1)]
+        (recur nextIter)))))
+
+(repeat 5 "hello")
+
 (def myTable (createTable "myTable"))
-(appendElem myTable myDiv)
-(def myRow (addRow myTable "MyRow"))
-(addCell myRow "myIdForCell")
-(addCell myRow "secondCell" "myInnerText")
-(addCell myRow "2" "myInnerText" "button")
-(addCell myRow "3" "myInnerText" "button")
-(addCell myRow "4" "myInnerText" "button")
-(def secondRow (addRow myTable "MyRow"))
-(addCell secondRow "myIdForCell")
-(addCell secondRow "secondCell" "myInnerText")
-(addCell secondRow "2" "myInnerText" "button")
-(addCell secondRow "3" "myInnerText" "button")
-(addCell secondRow "4" "myInnerText" "button")
-(addCell secondRow "5" "myInnerText" "button")
-(setClass myTable "table")
+(ht/appendElem myTable newElem)
+(ht/setStyle newElem "m")
+(ht/appendElem newElem ht/dBody)
+
+(defn myCallback [logthis]
+  (ht/log logthis))
+
+(def myRow (addRow myTable "MySpecialRow"))
+;(addCell myRow "hello" "there" "button")
+;(addCell myRow "hello" "there" "button")
+;(createXcells myRow 10)
+(createXrowsWithNcells myTable 10 10 ht/log)
+(ht/setClass myTable "table")
+(ht/setStyle myTable "margin-left: 36%;margin-top:1%;margin-right-60%")
 ;(setClass myDiv "box")
 
 

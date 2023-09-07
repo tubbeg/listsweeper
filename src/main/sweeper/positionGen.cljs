@@ -32,9 +32,13 @@
             nextIter (- n 1)]
         (recur nextIter updatedList)))))
 
+
 (defn safeGenerateXuniquePositions [x xlim ylim]
-  (if (< (+ x 1) (* xlim ylim))
+  (let [upperLim (< (+ x 1) (* xlim ylim))
+        lowerLim (> x 0)
+        numIsValid (and upperLim lowerLim)]
+  (if numIsValid
     {:numbers (generateXuniquePositions x xlim ylim)}
-    {:numbers []}))
+    {:numbers []})))
 
 (safeGenerateXuniquePositions 9 4 4)
