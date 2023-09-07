@@ -5,16 +5,16 @@
 (defn proxy [num] {:danger num})
 (defn position [piece] piece)
 
-(defn b
+(defn crteb
   ([x y mines proxies] {:x x :y y :mines mines :proxies proxies})
   ([x y mines] {:x x :y y :mines mines :proxies []})
   ([x y] {:x x :y y :mines [] :proxies []}))
 
 (defn board
-  ([x y mines proxies] (b x y mines proxies))
-  ([x y mines] (b x y mines))
-  ([x y] (b x y))
-  ([size] (b (:x size) (:y size))))
+  ([x y mines proxies] (crteb x y mines proxies))
+  ([x y mines] (crteb x y mines))
+  ([x y] (crteb x y))
+  ([size] (crteb (:x size) (:y size))))
 
 (defn notoutbnds [x y a b]
   (let [r1 (< x (+ a 1))
@@ -79,42 +79,108 @@
 (defn hasElem [coll elm]
   (some #(= elm %) coll))
 
+(defn changePosToProxy
+  ([pos proxy] {:x (:x pos) :y (:y pos) :num (+ 1 (:num proxy))})
+  ([pos] {:x (:x pos) :y (:y pos) :num 1}))
 
-(defn buildProxyColl [coll]
-  (loop [c coll
-         l []]
-    (let [e (peek c)
-          remainder (pop c)])))
 
-(defn addProxy [mine coll]
+(defn combineNwithProxies [mine coll]
   (let [n (:neighbours (:mine mine))
         updatedColl (concat n coll)]
     updatedColl))
 
 
+(defn createProxy
+  "input has the following format: [{:x 3 :y 2} 3]
+  output: {:x 3 :y 2 :num 3}"
+  [freq]
+  (let [el (first freq)
+        num (first (next freq))]
+    {:x (:x el) :y (:y el) :num num}))
+
+(defn extractPositionsFromProxy
+  "input has the following format {:x 3 :y 4 :num 2}
+  output : [{:x 3 :y 4} {:x 3 :y 4}]"
+  [proxy]
+  (->> (take (:num proxy) (repeat {:x (:x proxy) :y (:y proxy)})) 
+       (into [])))
+
+(defn extractPositionsFromProxies
+  "input: [{:x 3 :y 3 :num 2} {:x 3 :y 3 :num 4}]"
+  [proxies]
+  (loop [p proxies
+         l []]
+    (if (< (count p) 1) 
+      (into [] l) 
+      (let [firstEl (first p) 
+            remainder (rest p) 
+            pos (extractPositionsFromProxy firstEl) 
+            updatedVector (concat l pos)]
+        (recur remainder updatedVector)))))
+
+
+(def testProx [{:x 1 :y 4 :num 2} {:x 3 :y 3 :num 4}])
+testProx
+(extractPositionsFromProxies testProx)
+
+
+(defn convertPositionsToProxies
+  "coll has following format [{:x 3 y: 5} ...]
+   output: [{:x 3 :y 5 :num 3} ...]"
+  [coll]
+  (let [freq (frequencies coll)]
+    (loop [f freq
+           l []]
+      (if (< (count f) 1)
+        l
+        (let [firstEl (first f)
+              remainder (rest f)
+              proxy (createProxy firstEl)
+              updatedList (conj l proxy)] 
+          (recur remainder updatedList))))))
+
+
+(defn mergePositions
+  "input [] []
+   output: []"
+  [v1 v2]
+  (->> (concat v1 v2) 
+       (into [])))
+
 ; assumes that mine is within bounds
 ; mines has to have unique position
 (defn placeMine [x y oldboard]
-  (let
-   [newmine (mine x y oldboard)
-    p (addProxy newmine (:proxies oldboard))
-    updatedBoard (addNewMineToColl newmine oldboard)]
-    (board (:x oldboard) (:y oldboard) updatedBoard p)))
+  (let [newmine (mine x y oldboard) 
+        pos (:neighbours (:mine newmine)) 
+        boardPos (extractPositionsFromProxies (:proxies oldboard)) 
+        combo (mergePositions pos boardPos) 
+        toProxy (convertPositionsToProxies combo) 
+        updatedBoard (addNewMineToColl newmine oldboard)] 
+    (board (:x oldboard) (:y oldboard) updatedBoard toProxy)))
 
 
-; get all mines
-;
+(def myBoard (board 6 6))
+(def pos
+  (-> (:proxies myBoard) 
+      (extractPositionsFromProxies)))
+pos
+(def pos2 (calculateNeighbours 4 4))
+pos2
+(def myProxies (-> (:neighbours (:mine (mine 4 4 myBoard)))
+    (mergePositions pos2)))
+myProxies
+(convertPositionsToProxies myProxies)
+myBoard
+(def updatedBoard (placeMine 3 3 myBoard))
+updatedBoard
 
-(def myb (board 5 5))
-(def ub (placeMine 5 5 myb))
-ub
-(def ub2 (placeMine 5 5 ub))
-ub2
-
-; {:proxies {:X :Y}}
-
-
-
-
-
-
+(def newmine (mine 3 3 updatedBoard))
+newmine
+(def myPos (:neighbours (:mine newmine)))
+myPos
+(def boardPos (extractPositionsFromProxies (:proxies updatedBoard)))
+boardPos
+(def combo  (mergePositions myPos boardPos))
+combo
+(def toProxy (convertPositionsToProxies combo))
+toProxy
