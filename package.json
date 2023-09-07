@@ -5,11 +5,11 @@
   "scripts": {
     "repl": "npx shadow-cljs browser-repl",
     "watch": "npx shadow-cljs watch app",
+    "release": "npx shadow-cljs release app",
     "compile": "npx shadow-cljs compile app",
     "killjava": "killall -9 java"
   },
   "devDependencies": {
     "shadow-cljs": "2.25.4"
-    
   }
 }

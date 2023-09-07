@@ -1,14 +1,13 @@
-(ns sweeper.board)
-
-
-(def visibility [:visible :hidden])
-(defn proxy [num] {:danger num})
-(defn position [piece] piece)
+(ns sweeper.board
+  (:require [sweeper.positionGen :refer [safeGenerateXuniquePositions]]))
 
 (defn crteb
-  ([x y mines proxies] {:x x :y y :mines mines :proxies proxies})
-  ([x y mines] {:x x :y y :mines mines :proxies []})
-  ([x y] {:x x :y y :mines [] :proxies []}))
+  ([x y mines proxies]
+   {:x x :y y :mines mines :proxies proxies :visible []})
+  ([x y mines]
+   {:x x :y y :mines mines :proxies [] :visible []})
+  ([x y]
+   {:x x :y y :mines [] :proxies [] :visible []}))
 
 (defn board
   ([x y mines proxies] (crteb x y mines proxies))
@@ -36,14 +35,6 @@
         res (and r1 r2)]
     res))
 
-(defn filterMatch [x y proxyVector]
-  (filter
-   (fn [e]
-     (let [a (:x e) 
-           b (:y e)] 
-       (matchesPos x y a b)))
-   proxyVector)) 
-
 (defn calculateNeighbours [x y]
   [{:x (+ x 1) :y (+ y 1)}
    {:x (- x 1) :y (- y 1)}
@@ -60,7 +51,6 @@
          (fn [e] (isNotOutOfBounds (:x e) (:y e) xlimit ylimit)) 
          nVector)))
 
-
 (defn m
   ([x y xlimit ylimit]
    {:mine
@@ -74,21 +64,6 @@
 (defn addNewMineToColl [mine coll]
   (let [res (conj (:mines coll) mine)]
     res))
-
-
-(defn hasElem [coll elm]
-  (some #(= elm %) coll))
-
-(defn changePosToProxy
-  ([pos proxy] {:x (:x pos) :y (:y pos) :num (+ 1 (:num proxy))})
-  ([pos] {:x (:x pos) :y (:y pos) :num 1}))
-
-
-(defn combineNwithProxies [mine coll]
-  (let [n (:neighbours (:mine mine))
-        updatedColl (concat n coll)]
-    updatedColl))
-
 
 (defn createProxy
   "input has the following format: [{:x 3 :y 2} 3]
@@ -110,7 +85,7 @@
   [proxies]
   (loop [p proxies
          l []]
-    (if (< (count p) 1) 
+    (if (< (count p) 1)  
       (into [] l) 
       (let [firstEl (first p) 
             remainder (rest p) 
@@ -155,32 +130,26 @@ testProx
         boardPos (extractPositionsFromProxies (:proxies oldboard)) 
         combo (mergePositions pos boardPos) 
         toProxy (convertPositionsToProxies combo) 
-        updatedBoard (addNewMineToColl newmine oldboard)] 
-    (board (:x oldboard) (:y oldboard) updatedBoard toProxy)))
+        mines (addNewMineToColl newmine oldboard)]
+    (board (:x oldboard) (:y oldboard) mines toProxy)))
+
+(defn generateMines [board numberOfMines]
+  (let [a (:x board)
+        b (:y board)
+        positions (safeGenerateXuniquePositions numberOfMines a b)]
+    (loop [p (:numbers positions) b board] 
+      (if (< (count p) 1) 
+        b 
+        (let [firstPos (first p) 
+              remainder (rest p) 
+              updatedBoard (placeMine
+                            (:x firstPos)
+                            (:y firstPos) b)
+              ] 
+          (recur remainder updatedBoard))))))
 
 
 (def myBoard (board 6 6))
-(def pos
-  (-> (:proxies myBoard) 
-      (extractPositionsFromProxies)))
-pos
-(def pos2 (calculateNeighbours 4 4))
-pos2
-(def myProxies (-> (:neighbours (:mine (mine 4 4 myBoard)))
-    (mergePositions pos2)))
-myProxies
-(convertPositionsToProxies myProxies)
 myBoard
-(def updatedBoard (placeMine 3 3 myBoard))
-updatedBoard
-
-(def newmine (mine 3 3 updatedBoard))
-newmine
-(def myPos (:neighbours (:mine newmine)))
-myPos
-(def boardPos (extractPositionsFromProxies (:proxies updatedBoard)))
-boardPos
-(def combo  (mergePositions myPos boardPos))
-combo
-(def toProxy (convertPositionsToProxies combo))
-toProxy
+(def updatedBoard2 (generateMines myBoard 25))
+updatedBoard2
