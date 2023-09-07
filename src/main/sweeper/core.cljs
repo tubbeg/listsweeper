@@ -1,5 +1,7 @@
 (ns sweeper.core
-  (:require [sweeper.board :refer [mine]]
+  (:require [sweeper.board :refer [mine
+                                   generateMines
+                                   board]]
             [sweeper.util :as ht]
             [reagent.core :as r]
             [reagent.dom :as rdom]))
@@ -95,24 +97,38 @@
             nextIter (- n 1)]
         (recur nextIter)))))
 
-(repeat 5 "hello")
-
-(def myTable (createTable "myTable"))
-(ht/appendElem myTable newElem)
-(ht/setStyle newElem "m")
-(ht/appendElem newElem ht/dBody)
-
-(defn myCallback [logthis]
-  (ht/log logthis))
-
-(def myRow (addRow myTable "MySpecialRow"))
-;(addCell myRow "hello" "there" "button")
-;(addCell myRow "hello" "there" "button")
-;(createXcells myRow 10)
-(createXrowsWithNcells myTable 10 10 ht/log)
-(ht/setClass myTable "table")
-(ht/setStyle myTable "margin-left: 36%;margin-top:1%;margin-right-60%")
-;(setClass myDiv "box")
+(def ccount (r/atom 0))
 
 
-(def myMines mine)
+
+(def myBoard (board 5 5))
+(def updatedBoard (generateMines myBoard 10))
+
+
+(defn reagentCell [value]
+  [:td
+   [:div
+   {:class "button is-primary"
+    :id "this is definitely working :)"
+    :value value}
+    "reagent is great :)"]])
+
+(def testCells [{:x 5 :y 7} {:x 2 :y 4}])
+(def testCell {:x 5 :y 132})
+(defn reagentRow [cell]
+  [:tr
+   (reagentCell cell)])
+
+(defn reagentTable [cell]
+  [:table {:class "table"}
+   [:tbody
+    (reagentRow cell)]])
+
+
+
+(defn render-simple []
+  (rdom/render
+   [reagentTable testCell]
+   (.-body js/document)))
+
+(render-simple)
