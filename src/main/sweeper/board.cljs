@@ -70,7 +70,7 @@ test1
 
 (defn getPos [board x y]
   (let [pos ((convertPosToKey {:x x :y y}) board)] 
-    (if (= pos nil) (println "position is nil: " x y) ())
+    ;(if (= pos nil) (println "position is nil: " x y) ())
     (if (not (= pos nil))
       pos
       :notfound)))
