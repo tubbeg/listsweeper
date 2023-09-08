@@ -22,23 +22,23 @@
         randPos
         (recur)))))
 
-(defn generateXuniquePositions [x xlim ylim]
+(defn generateXuniquePositions [x size]
   (loop [n x
          l []]
     (if (< n 1)
       l
-      (let [p (generateUniquePosition l xlim ylim)
+      (let [p (generateUniquePosition l (:x size) (:y size))
             updatedList (conj l p)
             nextIter (- n 1)]
         (recur nextIter updatedList)))))
 
 
-(defn safeGenerateXuniquePositions [x xlim ylim]
-  (let [upperLim (< (+ x 1) (* xlim ylim))
+(defn safeGenerateXuniquePositions [x size]
+  (let [xlim (:x size)
+        ylim (:y size)
+        upperLim (< (+ x 1) (* xlim ylim))
         lowerLim (> x 0)
         numIsValid (and upperLim lowerLim)]
   (if numIsValid
-    {:numbers (generateXuniquePositions x xlim ylim)}
+    {:numbers (generateXuniquePositions x size)}
     {:numbers []})))
-
-(safeGenerateXuniquePositions 9 4 4)
