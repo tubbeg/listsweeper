@@ -1,70 +1,93 @@
 (ns sweeper.inspect
   (:require [sweeper.positionGen :refer [hasElem]]
-             [sweeper.board :refer [getPos
-                                    board
-                                    convertPosToKey
-                                    isProxy
-                                    isMine
-                                    isZero
-                                    filterOutOfBounds
-                                    calculateNeighbours]]))
+            [sweeper.board :refer [getPos
+                                   createCell
+                                   board
+                                   isError
+                                   convertPosToKey
+                                   isProxy
+                                   isEmpty
+                                   isMine
+                                   isZero
+                                   filterOutOfBounds
+                                   calculateNeighbours
+                                   notFound
+                                   toggleVisibility
+                                   isVisible]]))
 
 
 
-(defn minesHasPos [x y board]
-  (let []))
-
-
-(defn inspectEmpty [x y board]
-  ())
-
-(defn notFound [x y board]
-  (= (getPos board x y) :notfound))
-
-(defn addInspectedPos [pos cell visible]
-  (assoc visible (convertPosToKey pos) cell))
+(defn posNotFound
+  ([x y b]  (notFound (getPos b x y)))
+  ([p] (notFound p)))
 
 (defn getNeighboursPos [pos size]
- (-> (calculateNeighbours (:x pos) (:y pos)) 
-     (filterOutOfBounds (:x size) (:y size))))
+  (-> (calculateNeighbours (:x pos) (:y pos))
+      (filterOutOfBounds (:x size) (:y size))))
 
 
 (defn addNeighbours [pos size remainder]
   (concat remainder (getNeighboursPos pos size)))
 
+(defn filterDuplicates [queue]
+  ())
+
+(defn filterFoundCells [queue])
+
 ; posQueue [{:x x :y y} ...]
-(defn inspectPosition [posQueue board visible size] 
-    (loop [p posQueue
-           v visible]
-      (if (isZero p)
-        v
-        (let [firstEl (first p)
-              x (:x firstEl)
-              y (:y firstEl)
-              remainder (rest p)
-              c (getPos board x y)
-              isMineOrProx (or (isMine c) (isProxy c))
-              notFnd (notFound x y v)]
-          (cond 
-            (and notFnd (not isMineOrProx)) 
-            (recur (addNeighbours
-                    firstEl
-                    size
-                    remainder) (addInspectedPos
-                                 firstEl
-                                 (getPos board x y)
-                                 v))
-            notFnd
-            (recur remainder (addInspectedPos
-                              firstEl 
-                              (getPos board x y) 
-                              v))
-            :else
-            (recur remainder v))))))
+(defn _inspectPosition [p board]
+  (let [x (:x p)
+        y (:y p)
+        p (getPos board x y)
+        empty (isEmpty p)]
+    (if (posNotFound p)
+      {:result {:error "not found"} :board board}
+      (if (isVisible p)
+        {:result :ok :board board} 
+        (let [updatedBoard
+              (createCell (:cell p)
+                          :yes x y board 
+                          (:marker p))
+              newBoard (:board updatedBoard)]
+          (cond
+            (isError updatedBoard) {:result
+                                    {:error "inspection error!"}
+                                    :board board} 
+            empty {:result {:ok :empty} 
+                   :board newBoard}
+            :else {:result :ok :board newBoard}))))))
+
+(defn isHiddenEmpty [res]
+  (= (:ok (:result res)) :empty))
+
+(defn inspectPosition [board pos size] 
+  (loop [b board 
+         queue [pos]] 
+    (if (isZero queue) 
+      {:result :ok :board b} 
+      (let [el (first queue)  
+            remainder (rest queue) 
+            res (_inspectPosition el b)] 
+        (if (isHiddenEmpty res) 
+          (recur (:board res) (addNeighbours el size remainder)) 
+          (recur (:board res) remainder))))))
+
+
 
 (def s {:x 5 :y 5})
-(def myPos {:x 3 :y 4})
+(def myPos {:x 1 :y 1})
+(def testPos (getPos (board s) 3 3))
 (def queue [myPos])
 (getNeighboursPos {:x 3 :y 5} s)
 (addNeighbours {:x 1 :y 3} s [{:x 34 :y 23231}])
-(count (inspectPosition queue (board s) {} s))
+(def updatedVis (:board (_inspectPosition myPos (board s))))
+(def update2 (inspectPosition (board s) myPos s))
+updatedVis
+(:board update2)
+(def myAtom (atom {}))
+@myAtom
+(defn pseudoInpsect [n]
+  {:c 234 :y n})
+(swap! myAtom assoc :a :3)
+(swap! myAtom (fn [e] {:stuff e}))
+@myAtom

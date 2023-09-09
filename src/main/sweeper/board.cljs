@@ -54,26 +54,24 @@
     (if (< (count p) 1)
       hm
       (let [firstKey (convertPosToKey (first p))
-            remainder (rest p)
-            updatedMap (assoc hm firstKey :empty)]
+            remainder (rest p) 
+            emptyCell {:cell :empty :isVisible :no :marker :no}
+            updatedMap (assoc hm firstKey emptyCell)]
         (recur remainder updatedMap)))))
 
 (defn board [size]
   (buildEmptyBoard (generatePositions (:x size) (:y size))))
 
-
-(= (convertPosToKey {:x 3 :y 6}) (convertPosToKey {:x    3     :y 6}))
-(convertPosToKey {:x 0 :y 234134           })
-(convertPosToKey {:x 0                     :y 234134})
-(def test1 (board {:x 5 :y 5}))
-test1
-
-(defn getPos [board x y]
-  (let [pos ((convertPosToKey {:x x :y y}) board)] 
+(defn _getPos [board x y]
+  (let [pos ((convertPosToKey {:x x :y y}) board)]
     ;(if (= pos nil) (println "position is nil: " x y) ())
-    (if (not (= pos nil))
-      pos
-      :notfound)))
+   (if (not (= pos nil))
+     pos
+     :notfound)))
+
+(defn getPos
+  ([board x y] (_getPos board x y)) 
+  ([board pos] (_getPos board (:x pos) (:y pos))))
 
 (defn isError [r]
   (= (:result r) :error))
@@ -85,17 +83,46 @@ test1
       {:result {:error "cell is nil"} :board {}}
       {:result :ok :board (assoc board key newval)})))
 
+(defn createCell [type visibility x y board marked]
+  (setPos
+   board x y
+   {:cell type
+    :isVisible visibility
+    :marker marked}))
+
 (defn setProxy [board x y num]
-  (setPos board x y {:proxy num}))
+  (createCell {:proxy num} :no x y board :no))
+
+(defn getProxyNum [cell]
+  (:proxy (:cell cell)))
 
 (defn setMine [board x y]
-  (setPos board x y :mine))
+  (createCell :mine :no x y board :no))
+
+(defn isVisible [cell] 
+  (= (:isVisible cell) :yes))
+
+(defn isMarked [cell]
+  (= (:marker cell) :yes))
+
+(defn isEmpty [cell]
+  (= (:cell cell) :empty))
+
+(defn toggleVisibility [cell]
+  (if (isVisible cell)
+    {:cell (:cell cell) :isVisible :no :marker (:marker cell)} 
+    {:cell (:cell cell) :isVisible :yes :marker (:marker cell)}))
+
+(defn toggleMarker [cell]
+  (if (isMarked cell)
+    {:cell (:cell cell) :isVisible (:isVisible cell) :marker :no} 
+    {:cell (:cell cell) :isVisible (:isVisible cell) :marker :yes}))
 
 (defn isProxy [cell]
-  (contains? cell :proxy))
+  (contains? (:cell cell) :proxy))
 
 (defn isMine [cell]
-  (= cell :mine))
+  (= (:cell cell) :mine))
 
 (defn notFound [pos]
   (= pos :notfound))
@@ -106,12 +133,12 @@ test1
       {:result {:error "pos not found"} :board board}
         (if (isMine p) 
           {:result {:error "pos is mine"} :board board}
-          (if isProxy 
-            (setProxy board x y (+ (:proxy p) 1)) 
+          (if (isProxy p) 
+            (setProxy board x y (+ (getProxyNum p) 1)) 
             (setProxy board x y 1))))))
 
-(defn isZero [vector]
-  (< (count vector) 1))
+(defn isZero [vector] 
+  (zero? (count vector)))
 
 (defn placeMine [board x y size]
   (let [a (:x size)
@@ -131,10 +158,15 @@ test1
                           (:x firstN) 
                           (:y firstN))]
             (if (isError newBoard)
-              {:result {:error "error after placing proxy"} :board newBoard}
+              {:result
+               {:error "error after placing proxy"}
+               :board
+               newBoard}
               (recur (rest n) (:board newBoard))))
           ))  
-      {:result {:error "error after setting mine"} :board {}})))
+      {:result
+       {:error "error after setting mine"}
+       :board {}})))
 
 
 (defn placeGeneratedMines [mines board size]
