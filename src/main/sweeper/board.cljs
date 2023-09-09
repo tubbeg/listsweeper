@@ -124,6 +124,8 @@
 (defn isMine [cell]
   (= (:cell cell) :mine))
 
+(isMine {:cell :mine, :isVisible :no, :marker :no})
+
 (defn notFound [pos]
   (= pos :notfound))
 

@@ -39,7 +39,8 @@
   (let [x (:x p)
         y (:y p)
         p (getPos board x y)
-        empty (isEmpty p)]
+        empty (isEmpty p)
+        mine (isMine p)]
     (if (posNotFound p)
       {:result {:error "not found"} :board board}
       (if (isVisible p)
@@ -53,6 +54,8 @@
             (isError updatedBoard) {:result
                                     {:error "inspection error!"}
                                     :board board} 
+            mine {:result {:ok :mine}
+                   :board newBoard}
             empty {:result {:ok :empty} 
                    :board newBoard}
             :else {:result :ok :board newBoard}))))))
@@ -60,17 +63,23 @@
 (defn isHiddenEmpty [res]
   (= (:ok (:result res)) :empty))
 
+(defn isHiddenMine [res]
+  (= (:ok (:result res)) :mine))
+
 (defn inspectPosition [board pos size] 
   (loop [b board 
-         queue [pos]] 
+         queue [pos]
+         ret :none] 
     (if (isZero queue) 
-      {:result :ok :board b} 
+      {:result {:ok ret} :board b} 
       (let [el (first queue)  
             remainder (rest queue) 
-            res (_inspectPosition el b)] 
+            res (_inspectPosition el b)]
         (if (isHiddenEmpty res) 
-          (recur (:board res) (addNeighbours el size remainder)) 
-          (recur (:board res) remainder))))))
+          (recur (:board res) (addNeighbours el size remainder) ret)
+          (if (isHiddenMine res) 
+            (recur (:board res) remainder :mine) 
+            (recur (:board res) remainder ret)))))))
 
 
 
