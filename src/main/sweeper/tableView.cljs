@@ -109,6 +109,8 @@
                :size size
                :setBoard setBoard}))))))
 
+(defn isRunning [s]
+  (= (:gamestate s) :running))
 
 
 (defui counter [gamestate]
@@ -117,10 +119,10 @@
               :style {:margin-right "92%"
                       :margin-top "2%"
                       :margin-left "1%"}}]
-    (uix.core/use-effect
+    (uix.core/use-effect 
      (fn [] (js/setTimeout
-             (fn [] (setC (inc c))) 1000
+             (fn [] (if (isRunning gamestate)
+                      (setC (inc c))
+                      c)) 1000
              (js/clearTimeout c))))
-    (if (= (:gamestate gamestate) :running)
-      ($ :div stle "Seconds: " c)
-      ($ :div stle "Seconds: " 0))))
+      ($ :div stle "Seconds: " c)))

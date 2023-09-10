@@ -9,10 +9,13 @@
                                    isEmpty
                                    isMine
                                    isZero
+                                   isNotFound
+                                   setPos
                                    filterOutOfBounds
                                    calculateNeighbours
                                    notFound
                                    toggleVisibility
+                                   toggleMarker
                                    isVisible]]))
 
 
@@ -82,6 +85,11 @@
             (recur (:board res) remainder ret)))))))
 
 
+(defn markPosition [board pos size]
+  (let [c (getPos board pos)]
+    (if (isNotFound c)
+      {:result {:error "position is invalid!"} :board {}}
+      (setPos board pos (toggleMarker c)))))
 
 (def s {:x 5 :y 5})
 (def myPos {:x 1 :y 1})
