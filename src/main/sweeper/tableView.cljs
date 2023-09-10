@@ -4,7 +4,9 @@
                                    getProxyNum
                                    generateAndPlaceMines 
                                    isProxy 
+                                   isError
                                    isVisible 
+                                   isMarked
                                    isMine
                                    isNotFound]] 
             [sweeper.util :as ht] 
@@ -13,21 +15,30 @@
             [goog.dom :as gdom] 
             ["react-dom/client" :refer [createRoot]] 
             [cljs.core :as c] 
-            [sweeper.inspect :refer [inspectPosition 
-                                     posNotFound]]
+            [sweeper.inspect :refer [inspectPosition
+                                     markPosition
+                                     posNotFound
+                                     hasHitMine]]
             
             [uix.core :refer [defui $]]
             [uix.dom]))
 
 
 (defn matchCellType [cell]
-  (let [visible {:c (str " ") :s "has-background-dark"}
-        invisible {:c (str " ") :s "has-background-grey"}
-        mine {:c "M" :s " has-background-black has-text-danger"}]
+  (let [visible {:c (str " ")
+                 :s "has-background-dark"}
+        invisible {:c (str " ")
+                   :s "has-background-grey"}
+        marked {:c (str "^^")
+                :s "has-background-black has-text-danger"}
+        mine {:c "M"
+              :s " has-background-black has-text-danger"}]
   (cond 
+    (and (not (isVisible cell)) (isMarked cell)) marked
     (not (isVisible cell)) visible
     (isMine cell) mine
-    (isProxy cell) {:c (str (getProxyNum cell)) :s "has-background-light has-text-black"} 
+    (isProxy cell) {:c (str (getProxyNum cell))
+                    :s "has-background-light has-text-black"} 
     (isVisible cell) invisible
     :else "has-background-red")))
 
@@ -37,10 +48,6 @@
       (str (/ 100 y) "%")
       "40px")))
 
-(defn hasHitMine [res]
-  (= (:ok (:result res)) :mine))
-
-
 (defn myCallback [e setGameState board
                   setBoard size pos]
   (if (= (.-detail e) 2) 
@@ -49,7 +56,10 @@
         (setGameState :idle) 
         (setGameState :running))
       (setBoard (:board res))) 
-    (println "one click")))
+    (let [res (markPosition board pos size)]
+      (if (isError res)
+        (println "Error: " res)
+        (setBoard (:board res))))))
 
 (defui boardCell [{:keys [board row col key ; notice key parameter 
                           setGameState size setBoard]}]
