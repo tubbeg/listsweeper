@@ -5,7 +5,8 @@
                                    generateAndPlaceMines 
                                    isProxy 
                                    isVisible 
-                                   isMine]] 
+                                   isMine
+                                   isNotFound]] 
             [sweeper.util :as ht] 
             [reagent.core :as r] 
             [reagent.dom :as rdom] 
@@ -13,86 +14,113 @@
             ["react-dom/client" :refer [createRoot]] 
             [cljs.core :as c] 
             [sweeper.inspect :refer [inspectPosition 
-                                     posNotFound]]))
+                                     posNotFound]]
+            
+            [uix.core :refer [defui $]]
+            [uix.dom]))
 
-
-;(def newElem (ht/createElem "div"))
-
-;(changeId newElem "myNewElement")
-;(ht/appendElem newElem ht/dBody)
-
-(def ccount (r/atom 0))
-
-
-;(def updatedBoard (generateMines myBoard 10))
 
 (defn matchCellType [cell]
+  (let [visible {:c (str " ") :s "has-background-dark"}
+        invisible {:c (str " ") :s "has-background-grey"}
+        mine {:c "M" :s " has-background-black has-text-danger"}]
   (cond 
-    (not (isVisible cell)) {:c (str " ") :s "has-background-grey"}
-    (isMine cell) {:c "M" :s " has-background-black has-text-danger"}
+    (not (isVisible cell)) visible
+    (isMine cell) mine
     (isProxy cell) {:c (str (getProxyNum cell)) :s "has-background-light has-text-black"} 
-    (isVisible cell) {:c (str " ") :s "has-background-dark"}
-    :else "has-background-red"))
+    (isVisible cell) invisible
+    :else "has-background-red")))
 
-(defn setGameStateToRunning [g]
-  (println "current state: " @g)
-  (swap! g (fn [current] (assoc current :state :running)))
-  (println "state updated: " @g))
+(defn getWidth [s]
+  (let [y (:y s)]
+    (if (> y 0) 
+      (str (/ 100 y) "%")
+      "40px")))
 
-(defn hasLost [g res]
-  (let [r (:result res)
-        hasClickedMine (= (:ok r) :mine)]
-    (println "has clicked mine is" hasClickedMine)
-    (if hasClickedMine 
-      (swap! g (fn [current] (assoc current :state :lose)))
-      (println "not over yet")))
-  (println "current game state" @g))
+(defn hasHitMine [res]
+  (= (:ok (:result res)) :mine))
 
-(defn inspectCell [e pos s b c g]
+
+(defn myCallback [e setGameState board
+                  setBoard size pos]
   (if (= (.-detail e) 2) 
-    (let [res (inspectPosition @b pos s)]
-      (println "double click on cell" pos "with type" c)
-      (setGameStateToRunning g)
-      (hasLost g res)
-       (swap! b (fn [_] (:board res)))) 
-    (println "one click on pos" pos)))
+    (let [res (inspectPosition board pos size)] 
+      (if (hasHitMine res) 
+        (setGameState :idle) 
+        (setGameState :running))
+      (setBoard (:board res))) 
+    (println "one click")))
 
-(defn makeCell [pos b size g]
-  (let [c (getPos @b pos)
-        res  (matchCellType c) 
-        callback (fn [e] (inspectCell e pos size b c g))] 
-    [:td
-      {:class (str "button is-grey " (:s res))
-       :id (str :C (:x pos) (:y pos))
-       :value {:x (:x pos) :y (:y pos)}
-       :onClick callback
-       :style {:hover " background-color: black"
-               :width "40px"}}
-      (:c res)]))
+(defui boardCell [{:keys [board row col key ; notice key parameter 
+                          setGameState size setBoard]}]
+  (let [pos {:x row :y col}
+        c (getPos board row col)
+        errorCell {:cell :error
+                   :isVisible :yes
+                   :marker :yes}
+        tpe (matchCellType c)]
+  ($ :td {:key key
+          :value row
+          :class (str "button is-grey " (:s tpe))
+          :style {:width (getWidth size)}
+          :on-click
+          #(myCallback % setGameState
+                       board setBoard size pos)}
+     (if (isNotFound c)
+       errorCell
+       (:c tpe)))))
 
-(defn makeRow [row size b g]
-  (let [x (:x size)
-        r (->> (range x)
-              (map inc))]
-   [:tr
-    (for [i r]
-      (makeCell {:x i :y row} b size g))]))
+(defui boardBody [{:keys [rows cols board
+                          setGameState
+                          size
+                          setBoard]}]
+  (for [i cols] 
+    ($ :tr {:width (getWidth size)
+            :key (str "R" i )}  
+       (for [n rows]  
+         ($ boardCell
+            {:board board :row n :col i :key (str "C" n i) 
+             :setGameState setGameState
+             :size size
+             :setBoard setBoard})))))
 
-(defn makeTable [size b g]
-  (println "currennt board" b)
-  (let [
-        y (:y size)
-        r (->> (range y)
-               (map inc))]
-    [:div
-     {:class "box has-background-grey-dark"
-      :style {:margin-left "25%" 
-              :margin-right "42%"
-              :margin-top "1%"}}
-     [:table {:class "table is-bordered"  
-              :style {:margin-left "6%" 
-                      :margin-top "1%" 
-                      :margin-right "6%"}} 
-      [:tbody  
-       (for [i r] 
-         (makeRow i size b g))]]]))
+(defui boardTable [{:keys [board size gameState
+                           setGameState setBoard]}]
+  (let [rows (->> (range (:x size))
+                  (map inc))
+        cols (->> (range (:y size))
+                  (map inc))]
+   ($ :div  {:class "box has-background-grey-dark"
+           :style {:margin-left "30%"
+                   :margin-right "40%"
+                   :margin-top "1%"}}
+     ($ :table 
+        {:width "70%"
+         :class "table is-bordered"
+                :style {:margin-left "1%"
+                        :margin-right "1%"
+                        :margin-top "1%"}} 
+        ($ :tbody 
+           ($ boardBody
+              {:rows rows
+               :cols cols
+               :board board
+               :setGameState setGameState
+               :size size
+               :setBoard setBoard}))))))
+
+
+
+(defui counter [gamestate]
+  (let [[c setC] (uix.core/use-state 0)
+        stle {:class "box has-background-dark has-text-white"
+              :style {:margin-right "92%"
+                      :margin-top "2%"
+                      :margin-left "1%"}}]
+    (uix.core/use-effect
+     (fn [] (js/setTimeout
+             (fn [] (setC (inc c))) 1000
+             (js/clearTimeout c))))
+    (if (= (:gamestate gamestate) :running)
+      ($ :div stle "Seconds: " c)
+      ($ :div stle "Seconds: " 0))))

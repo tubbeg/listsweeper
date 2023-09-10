@@ -73,15 +73,22 @@
   ([board x y] (_getPos board x y)) 
   ([board pos] (_getPos board (:x pos) (:y pos))))
 
+(defn isNotFound [p]
+  (= p :notfound))
+
 (defn isError [r]
   (= (:result r) :error))
 
-(defn setPos [board x y newval]
+(defn _setPos [board x y newval]
   (let [key (convertPosToKey {:x x :y y})
         c (key board)]
     (if (= c nil)
       {:result {:error "cell is nil"} :board {}}
       {:result :ok :board (assoc board key newval)})))
+
+(defn setPos 
+  ([board pos newval] (_setPos board (:x pos) (:y pos) newval))
+  ([board x y newval] (_setPos board x y newval)))
 
 (defn createCell [type visibility x y board marked]
   (setPos
