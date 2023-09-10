@@ -195,6 +195,21 @@
   (-> (:numbers (safeGenerateXuniquePositions n size))
       (placeGeneratedMines board size)))
 
+(defn mineIsMarked [cell]
+  (and (isMarked cell) (isMarked cell)))
+
+(defn getAllMines [board]
+  (filter #(isMine %) (vals board)))
+
+(defn getAllMarkedMines [board] 
+  (filter #(isMarked %) (getAllMines board)))
+
+(defn allMinesAreMarked [board totalMines]
+  (let [allMarkedMines (getAllMarkedMines board)
+        nrOfMarkedMines (count allMarkedMines)]
+    (println nrOfMarkedMines)
+    (= nrOfMarkedMines totalMines)))
+
 (def mySize {:x 3 :y 3})
 (def myBoard (board mySize))
 myBoard
@@ -202,6 +217,10 @@ myBoard
 (def upd (placeMine myBoard 1 2 mySize))
 upd
 (def up3 (generateAndPlaceMines 5 mySize myBoard))
+up3
+
+(getAllMines (:board up3))
+(allMinesAreMarked (:board up3) 5)
 ;(def firstMine (first mines))
 (placeMine myBoard 3 3 mySize)
 (placeProxy myBoard 3 3)

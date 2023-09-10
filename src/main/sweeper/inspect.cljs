@@ -91,7 +91,6 @@
       {:result {:error "position is invalid!"} :board {}}
       (setPos board pos (toggleMarker c)))))
 
-
 (defn hasHitMine [res]
   (= (:ok (:result res)) :mine))
 

@@ -11,17 +11,34 @@
 (def _myBoard (->> (board size)
                    (generateAndPlaceMines 5 size)
                    :board))
+
+
+(defui stateUI [s]
+  (let [stle {:class "box has-background-dark has-text-white"
+              :style {:margin-right "92%"
+                      :margin-top "2%"
+                      :margin-left "1%"}}] 
+    ($ :div stle  "State " (str (:s s)))))
+
+
+
+
 (defui app []
   (let [[b setB] (uix.core/use-state _myBoard)
         [s setS] (uix.core/use-state size)
+        [totalMines setTotalMines] (uix.core/use-state 5)
         [gamestate setGamestate] (uix.core/use-state :running)]
     ($ :<>
-       ($ counter {:gamestate gamestate})
+       ($ counter {:gamestate gamestate}) 
+       ($ stateUI {:s gamestate})
        ($ boardTable  {:board b
                        :size s
                        :gameState gamestate
                        :setGameState setGamestate
-                       :setBoard setB}))))
+                       :setBoard setB
+                       :totalMines totalMines}))))
+
+
 
 
 (def myElem (ht/createElem "div"))

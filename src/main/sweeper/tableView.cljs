@@ -8,7 +8,8 @@
                                    isVisible 
                                    isMarked
                                    isMine
-                                   isNotFound]] 
+                                   isNotFound
+                                   allMinesAreMarked]] 
             [sweeper.util :as ht] 
             [reagent.core :as r] 
             [reagent.dom :as rdom] 
@@ -49,12 +50,14 @@
       "40px")))
 
 (defn myCallback [e setGameState board
-                  setBoard size pos]
+                  setBoard size pos totalMines]
   (if (= (.-detail e) 2) 
     (let [res (inspectPosition board pos size)] 
-      (if (hasHitMine res) 
-        (setGameState :idle) 
-        (setGameState :running))
+      (if (allMinesAreMarked (:board res) totalMines)
+        (setGameState :win)
+        (if (hasHitMine res) 
+          (setGameState :idle)
+          (setGameState :running))) 
       (setBoard (:board res))) 
     (let [res (markPosition board pos size)]
       (if (isError res)
@@ -62,7 +65,8 @@
         (setBoard (:board res))))))
 
 (defui boardCell [{:keys [board row col key ; notice key parameter 
-                          setGameState size setBoard]}]
+                          setGameState size setBoard
+                          totalMines]}]
   (let [pos {:x row :y col}
         c (getPos board row col)
         errorCell {:cell :error
@@ -75,7 +79,8 @@
           :style {:width (getWidth size)}
           :on-click
           #(myCallback % setGameState
-                       board setBoard size pos)}
+                       board setBoard size pos
+                       totalMines)}
      (if (isNotFound c)
        errorCell
        (:c tpe)))))
@@ -83,7 +88,8 @@
 (defui boardBody [{:keys [rows cols board
                           setGameState
                           size
-                          setBoard]}]
+                          setBoard
+                          totalMines]}]
   (for [i cols] 
     ($ :tr {:width (getWidth size)
             :key (str "R" i )}  
@@ -92,10 +98,12 @@
             {:board board :row n :col i :key (str "C" n i) 
              :setGameState setGameState
              :size size
-             :setBoard setBoard})))))
+             :setBoard setBoard
+             :totalMines totalMines})))))
 
 (defui boardTable [{:keys [board size gameState
-                           setGameState setBoard]}]
+                           setGameState setBoard
+                           totalMines]}]
   (let [rows (->> (range (:x size))
                   (map inc))
         cols (->> (range (:y size))
@@ -117,10 +125,13 @@
                :board board
                :setGameState setGameState
                :size size
-               :setBoard setBoard}))))))
+               :setBoard setBoard
+               :totalMines totalMines}))))))
 
 (defn isRunning [s]
   (= (:gamestate s) :running))
+
+
 
 
 (defui counter [gamestate]
