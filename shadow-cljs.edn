@@ -5,7 +5,9 @@
   "src/test"]
 
  :dependencies
- [[reagent "1.2.0"]]
+ [[com.pitch/uix.dom "0.10.0"]
+  [com.pitch/uix.core "0.10.0"]
+  [reagent "1.2.0"]]
 
  :dev-http {3000 "public"}
  
