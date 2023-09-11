@@ -52,17 +52,17 @@
 
 (defn isRunning [gameState]
   ;(println "s is " gameState)
-  (println "gamestate is" gameState)
+  ;(println "gamestate is" gameState)
   (if (not (= gameState :lose))
     (=  gameState :running)
     false))
 
 (defn isGameOver [gameState]
-  (println "gamestate is" gameState)
+  ;(println "gamestate is" gameState)
   (let [res (or (= gameState :lose)
                 (= gameState :win)
                 (= gameState :idle))]
-    (println "res is" res)
+;    (println "res is" res)
     res))
 
 
@@ -78,9 +78,11 @@
           :else (setGameState :running)) 
         (setBoard (:board res))) 
     (let [res (markPosition board pos size)]
-      (if (isError res)
-        (println "Error: " res)
-        (setBoard (:board res)))))
+      (cond
+        (isError res) (println "Error: " res)
+        (hasWinCondition
+         (:board res) totalMines) (setGameState :win)
+        :else (setBoard (:board res)))))
     (println "game over :)")))
 
 (defui boardCell [{:keys [board row col key ; notice key parameter 

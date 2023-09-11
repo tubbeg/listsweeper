@@ -2,15 +2,14 @@
   (:require [sweeper.tableView :refer [boardTable
                                        counter]] 
             [sweeper.util :as ht]
-            [sweeper.board :refer [board generateAndPlaceMines]]
+            [sweeper.board :refer [board createBoardWithMines]]
             [uix.core :refer [defui $]]
             [uix.dom]))
 
-
-(def size {:x 8 :y 8})
-(def _myBoard (->> (board size)
-                   (generateAndPlaceMines 5 size)
-                   :board))
+(def defaultTotalMines 5)
+(def defaultSize {:x 8 :y 8})
+(def defaultBoard
+  (createBoardWithMines defaultSize defaultTotalMines))
 
 
 (defui stateUI [s]
@@ -21,18 +20,38 @@
     ($ :div stle  "State " (str (:s s)))))
 
 
+(defn restartBoard [size totalMines setB setGameState]
+  (println "You clicked me >:(")
+  (setGameState :init)
+  (setB (createBoardWithMines size totalMines)))
+
+
+(defui restartGame [{:keys [totalMines size
+                            setGameState setB]}]
+  ($ :div 
+     ($ :button
+        {:class "button is-info" 
+         :on-click #(restartBoard
+                     size totalMines setB setGameState)}
+                  "Start New Game!")))
+
 
 
 (defui app []
-  (let [[b setB] (uix.core/use-state _myBoard)
-        [s setS] (uix.core/use-state size)
+  (let [[b setB] (uix.core/use-state defaultBoard)
+        [s setS] (uix.core/use-state defaultSize)
         [c setC] (uix.core/use-state 0)
-        [totalMines setTotalMines] (uix.core/use-state 5)
+        [totalMines setTotalMines] (uix.core/use-state
+                                    defaultTotalMines)
         [gameState setGamestate] (uix.core/use-state :init)]
-    (println "root gamestate is" gameState)
-    ($ :<>
+  ;  (println "root gamestate is" gameState)
+    ($ :<> 
        ($ counter {:gameState gameState :c c :setC setC}) 
        ($ stateUI { :s gameState})
+       ($ restartGame {:totalMines totalMines
+                       :size s
+                       :setGameState setGamestate
+                       :setB setB})
        ($ boardTable  {:board b
                        :size s
                        :gameState gameState

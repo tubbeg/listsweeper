@@ -225,6 +225,11 @@
   (and (allMinesAreMarked board totalMines)
        (allNoneMinesAreVisible board)))
 
+(defn createBoardWithMines [size totalMines]
+  (->> (board size) 
+       (generateAndPlaceMines totalMines size) 
+       :board))
+
 (def mySize {:x 3 :y 3})
 (def myBoard (board mySize))
 myBoard
@@ -233,6 +238,8 @@ myBoard
 upd
 (def up3 (generateAndPlaceMines 5 mySize myBoard))
 up3
+
+
 
 (getAllMines (:board up3))
 (allMinesAreMarked (:board up3) 5)
