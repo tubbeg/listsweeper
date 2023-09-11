@@ -49,6 +49,8 @@
       (str (/ 100 y) "%")
       "40px")))
 
+
+
 (defn myCallback [e setGameState board
                   setBoard size pos totalMines]
   (if (= (.-detail e) 2) 
@@ -128,22 +130,31 @@
                :setBoard setBoard
                :totalMines totalMines}))))))
 
-(defn isRunning [s]
-  (= (:gamestate s) :running))
+(defn isRunning [gameState]
+  ;(println "s is " gameState)
+  (println "gamestate is" gameState)
+  (if (not (= gameState :lose))
+    (=  gameState :running)
+    false))
 
 
 
+(defn startEffect [c setC]
+  (uix.core/use-effect
+   #(js/setTimeout 
+     (fn [] (setC (inc c))) 1000 
+     (js/clearTimeout c))))
 
-(defui counter [gamestate]
-  (let [[c setC] (uix.core/use-state 0)
-        stle {:class "box has-background-dark has-text-white"
+
+(defui counter [{:keys [gameState c setC]}]
+  (let [
+        stle {:class
+              "box has-background-dark
+               has-text-white"
               :style {:margin-right "92%"
                       :margin-top "2%"
-                      :margin-left "1%"}}]
-    (uix.core/use-effect 
-     (fn [] (js/setTimeout
-             (fn [] (if (isRunning gamestate)
-                      (setC (inc c))
-                      c)) 1000
-             (js/clearTimeout c))))
-      ($ :div stle "Seconds: " c)))
+                      :margin-left "1%"}}] 
+    (if (isRunning gameState)  
+      (startEffect c setC) 
+      (println "game is idling")) 
+    ($ :div stle "Seconds: " c)))

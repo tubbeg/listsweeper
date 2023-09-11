@@ -26,14 +26,16 @@
 (defui app []
   (let [[b setB] (uix.core/use-state _myBoard)
         [s setS] (uix.core/use-state size)
+        [c setC] (uix.core/use-state 0)
         [totalMines setTotalMines] (uix.core/use-state 5)
-        [gamestate setGamestate] (uix.core/use-state :running)]
+        [gameState setGamestate] (uix.core/use-state :running)]
+    (println "root gamestate is" gameState)
     ($ :<>
-       ($ counter {:gamestate gamestate}) 
-       ($ stateUI {:s gamestate})
+       ($ counter {:gameState gameState :c c :setC setC}) 
+       ($ stateUI { :s gameState})
        ($ boardTable  {:board b
                        :size s
-                       :gameState gamestate
+                       :gameState gameState
                        :setGameState setGamestate
                        :setBoard setB
                        :totalMines totalMines}))))
