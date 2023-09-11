@@ -240,9 +240,10 @@
 
 (defn generateExceptions [pos size]
   (-> (calculateNeighbours (:x pos) (:y pos))
-      (filterOutOfBounds (:x size) (:y size))))
+      (filterOutOfBounds (:x size) (:y size))
+      (conj pos)))
 
-
+(generateExceptions {:x 3 :y 3 } {:x 4 :y 4})
 
 (defn createBoardWithMinesReservations [size pos totalMines]
  ; (println "trying to generate")

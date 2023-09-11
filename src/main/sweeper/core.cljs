@@ -33,17 +33,79 @@
                             setGameState setB]}]
   ($ :div  {:class "box has-background-dark"
             :style {:margin-right "86%"
-                    :margin-top "2%"
+                    :margin-top "1%"
                     :margin-left "1%"}} 
      ($ :button
         {:class "button is-info" 
          :style {:margin-right "82%"
-                 :margin-top "2%"
+                 :margin-top "1%"
                  :margin-left "1%"}
          :on-click #(restartBoard
                      setC size totalMines setB setGameState)}
                   "Start New Game!")))
 
+
+(defn changeToDefault [setSize setB setGameState setC setM]
+  (setSize defaultSize)
+  (setM defaultTotalMines)
+  (setB defaultBoard)
+  (setGameState :init)
+  (setC 0))
+
+(defn changeToMedium [setSize setB setGameState setC setM] 
+  (let [s {:x 9 :y 9}
+        m 15] 
+    (setSize s)
+    (setM m)
+    (setB (createBoardWithMines s m)) 
+    (setGameState :init) 
+    (setC 0)))
+
+(defn changeToHard [setSize setB setGameState setC setM] 
+  (let [s {:x 12 :y 12}
+       m 33]
+   (setSize s)
+   (setM m)
+   (setB (createBoardWithMines s m))
+   (setGameState :init)
+   (setC 0)))
+
+
+(defn changeToVeryHard [setSize setB setGameState setC setM]
+  (let [s {:x 9 :y 9}
+       m 33]
+   (setSize s)
+   (setM m)
+   (setB (createBoardWithMines s m))
+   (setGameState :init)
+   (setC 0)))
+
+
+(defn changeDifficulty [e setGameState setSize setB setC setM]
+  (case (.. e -target -value)
+    "medium" (changeToMedium setSize setB setGameState setC setM)
+    "hard" (changeToHard setSize setB setGameState setC setM)
+    "very hard" (changeToVeryHard setSize setB setGameState setC setM)
+    (changeToDefault setSize setB setGameState setC setM))
+  (println "You have truly changed me :O"))
+  ;(println "e is " e)
+  ;(println (.. e -target -value)))
+
+(defui selectDifficulty [{:keys [setGameState setSize
+                                 setB setC setM]}]
+  ($ :div {:class "box has-background-dark"
+           :style {:margin-right "86%"
+                  :margin-top "1%"
+                  :margin-left "1%"}}
+   ($ :div {:class "select"}
+     ($ :select {
+                 :on-change #(changeDifficulty
+                              % setGameState setSize
+                              setB setC setM)}
+        ($ :option "easy")
+        ($ :option "medium")
+        ($ :option "hard")
+        ($ :option "very hard")))))
 
 
 (defui app []
@@ -55,19 +117,26 @@
         [gameState setGamestate] (uix.core/use-state :init)]
   ;  (println "root gamestate is" gameState)
     ($ :<> 
+        ($ boardTable  {:board b
+                          :size s
+                          :gameState gameState
+                          :setGameState setGamestate
+                          :setBoard setB
+                          :totalMines totalMines})
        ($ counter {:gameState gameState :c c :setC setC}) 
-       ($ stateUI { :s gameState :c c})
+       ;($ stateUI { :s gameState :c c})
        ($ restartGame {:setC setC
                        :totalMines totalMines
                        :size s
                        :setGameState setGamestate
                        :setB setB})
-       ($ boardTable  {:board b
-                       :size s
-                       :gameState gameState
-                       :setGameState setGamestate
-                       :setBoard setB
-                       :totalMines totalMines}))))
+       ($ selectDifficulty {
+                            :setGameState setGamestate
+                            :setSize setS
+                            :setB setB
+                            :setC setC
+                            :setM setTotalMines}))))
+      
 
 (def myElem (ht/createElem "div"))
 (ht/appendElem myElem ht/dBody)

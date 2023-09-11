@@ -32,9 +32,9 @@
                  :s "has-background-dark"}
         invisible {:c (str " ")
                    :s "has-background-grey"}
-        marked {:c (str "^^")
+        marked {:c "🚩"
                 :s "has-background-black has-text-danger"}
-        mine {:c "M"
+        mine {:c "💀"
               :s " has-background-black has-text-danger"}]
   (cond 
     (and (not (isVisible cell)) (isMarked cell)) marked
@@ -67,6 +67,9 @@
 ;    (println "res is" res)
     res))
 
+(defn hasWon [gameState]
+  (= gameState :win))
+
 (defn isInit [gameState]
   ;(println "gamestate is" gameState)
   (= gameState :init))
@@ -82,7 +85,8 @@
   (let [boardToInspect (inspectWhichBoard? b pos
                                            size totalMines
                                            gameState)
-        res (inspectPosition boardToInspect pos size)]
+        res (inspectPosition boardToInspect pos size)] 
+    (println "total mines are: " totalMines)
      (cond
        (hasWinCondition
         (:board res) totalMines) (setGameState :win)
@@ -130,7 +134,7 @@
                        totalMines)}
      (if (isNotFound c)
        errorCell
-       (:c tpe)))))
+       ($ :p (:c tpe))))))
 
 (defui boardBody [{:keys [rows cols board
                           gameState
@@ -196,5 +200,7 @@
     (uix.core/use-effect 
      #(js/setTimeout 
        (fn [] (doMath setC c gameState)) 1000 
-       (js/clearTimeout c)))
-    ($ :div stle "Seconds: " c)))
+       (js/clearTimeout c))) 
+    (if (hasWon gameState)
+      ($ :div stle (str "You won in " c " seconds!")) 
+      ($ :div stle "Seconds: " c))))
