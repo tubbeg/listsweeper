@@ -201,14 +201,29 @@
 (defn getAllMines [board]
   (filter #(isMine %) (vals board)))
 
+
+(defn getAllNoneMines [board]
+  (filter #(not (isMine %)) (vals board)))
+
+(defn getAllInvisibleNoneMines [board]
+  (filter #(not (isVisible %)) (getAllNoneMines board)))
+
+(defn allNoneMinesAreVisible [board]
+  (let [allInvisNoneMines (getAllInvisibleNoneMines board)]
+    (= (count allInvisNoneMines) 0)))
+
 (defn getAllMarkedMines [board] 
   (filter #(isMarked %) (getAllMines board)))
 
 (defn allMinesAreMarked [board totalMines]
   (let [allMarkedMines (getAllMarkedMines board)
         nrOfMarkedMines (count allMarkedMines)]
-    (println nrOfMarkedMines)
+    ;(println nrOfMarkedMines)
     (= nrOfMarkedMines totalMines)))
+
+(defn hasWinCondition [board totalMines]
+  (and (allMinesAreMarked board totalMines)
+       (allNoneMinesAreVisible board)))
 
 (def mySize {:x 3 :y 3})
 (def myBoard (board mySize))
