@@ -4,35 +4,44 @@
             [sweeper.util :as ht]
             [sweeper.board :refer [board createBoardWithMines]]
             [uix.core :refer [defui $]]
-            [uix.dom]))
+            [uix.dom]
+            [cljs.core :as c]))
 
 (def defaultTotalMines 5)
 (def defaultSize {:x 8 :y 8})
 (def defaultBoard
   (createBoardWithMines defaultSize defaultTotalMines))
 
-
-(defui stateUI [s]
+(defui stateUI [{:keys [s c]}]
   (let [stle {:class "box has-background-dark has-text-white"
-              :style {:margin-right "92%"
+              :style {:margin-right "86%"
                       :margin-top "2%"
-                      :margin-left "1%"}}] 
-    ($ :div stle  "State " (str (:s s)))))
+                      :margin-left "1%"}}]
+    (if (= s :win) 
+      ($ :div stle (str "You won in " c " seconds!")) 
+      ($ :div stle  "State " (str s)))))
 
 
-(defn restartBoard [size totalMines setB setGameState]
+(defn restartBoard [setC size totalMines setB setGameState]
   (println "You clicked me >:(")
   (setGameState :init)
+  (setC 0)
   (setB (createBoardWithMines size totalMines)))
 
 
-(defui restartGame [{:keys [totalMines size
+(defui restartGame [{:keys [setC totalMines size
                             setGameState setB]}]
-  ($ :div 
+  ($ :div  {:class "box has-background-dark"
+            :style {:margin-right "86%"
+                    :margin-top "2%"
+                    :margin-left "1%"}} 
      ($ :button
         {:class "button is-info" 
+         :style {:margin-right "82%"
+                 :margin-top "2%"
+                 :margin-left "1%"}
          :on-click #(restartBoard
-                     size totalMines setB setGameState)}
+                     setC size totalMines setB setGameState)}
                   "Start New Game!")))
 
 
@@ -47,8 +56,9 @@
   ;  (println "root gamestate is" gameState)
     ($ :<> 
        ($ counter {:gameState gameState :c c :setC setC}) 
-       ($ stateUI { :s gameState})
-       ($ restartGame {:totalMines totalMines
+       ($ stateUI { :s gameState :c c})
+       ($ restartGame {:setC setC
+                       :totalMines totalMines
                        :size s
                        :setGameState setGamestate
                        :setB setB})
@@ -58,9 +68,6 @@
                        :setGameState setGamestate
                        :setBoard setB
                        :totalMines totalMines}))))
-
-
-
 
 (def myElem (ht/createElem "div"))
 (ht/appendElem myElem ht/dBody)
