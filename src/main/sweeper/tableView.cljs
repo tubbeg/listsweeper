@@ -2,7 +2,9 @@
   (:require [sweeper.board :refer [board 
                                    getPos 
                                    getProxyNum
-                                   generateAndPlaceMines 
+                                   generateAndPlaceMines
+                                   createBoardWithMines
+                                   createBoardWithMinesReservations
                                    isProxy 
                                    isError
                                    isVisible 
@@ -65,25 +67,48 @@
 ;    (println "res is" res)
     res))
 
+(defn isInit [gameState]
+  ;(println "gamestate is" gameState)
+  (= gameState :init))
+
+; creates a new board during the start of the game
+(defn inspectWhichBoard? [b pos size totalMines gameState]
+  (if (isInit gameState)
+    (createBoardWithMinesReservations size pos totalMines)
+    b))
+
+(defn inspectionAction [b pos size totalMines
+                        setGameState setBoard gameState]
+  (let [boardToInspect (inspectWhichBoard? b pos
+                                           size totalMines
+                                           gameState)
+        res (inspectPosition boardToInspect pos size)]
+     (cond
+       (hasWinCondition
+        (:board res) totalMines) (setGameState :win)
+       (hasHitMine res) (setGameState :lose)
+       :else (setGameState :running))
+     (setBoard (:board res))))
+
+
+
+(defn markAction [b pos size totalMines setGameState setBoard] 
+  (let [res (markPosition b pos size)] 
+    (cond 
+      (isError res) (println "Error: " res) 
+      (hasWinCondition 
+       (:board res) totalMines) (setGameState :win) 
+      :else (setBoard (:board res)))))
+
 
 (defn myCallback [e gameState setGameState board
                   setBoard size pos totalMines] 
-  (if (not (isGameOver gameState)) 
+  (when (not (isGameOver gameState))
     (if (= (.-detail e) 2) 
-      (let [res (inspectPosition board pos size)] 
-        (cond 
-          (hasWinCondition
-           (:board res) totalMines) (setGameState :win) 
-          (hasHitMine res)(setGameState :lose) 
-          :else (setGameState :running)) 
-        (setBoard (:board res))) 
-    (let [res (markPosition board pos size)]
-      (cond
-        (isError res) (println "Error: " res)
-        (hasWinCondition
-         (:board res) totalMines) (setGameState :win)
-        :else (setBoard (:board res)))))
-    (println "game over :)")))
+      (inspectionAction board pos size totalMines 
+                        setGameState setBoard gameState)
+      (markAction board pos size totalMines
+                  setGameState setBoard))))
 
 (defui boardCell [{:keys [board row col key ; notice key parameter 
                           gameState setGameState

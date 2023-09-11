@@ -195,6 +195,11 @@
   (-> (:numbers (safeGenerateXuniquePositions n size))
       (placeGeneratedMines board size)))
 
+(defn generateAndPlaceMinesExcluded [n size exc board]
+  ;(println "Excluding: " exc)
+  (-> (:numbers (safeGenerateXuniquePositions n size exc))
+      (placeGeneratedMines board size)))
+
 (defn mineIsMarked [cell]
   (and (isMarked cell) (isMarked cell)))
 
@@ -229,6 +234,25 @@
   (->> (board size) 
        (generateAndPlaceMines totalMines size) 
        :board))
+
+
+
+
+(defn generateExceptions [pos size]
+  (-> (calculateNeighbours (:x pos) (:y pos))
+      (filterOutOfBounds (:x size) (:y size))))
+
+
+
+(defn createBoardWithMinesReservations [size pos totalMines]
+ ; (println "trying to generate")
+  (let [exceptions (generateExceptions pos size)]
+;   (println "exceptions: " exceptions)
+   (->> (board size) 
+       (generateAndPlaceMinesExcluded totalMines size exceptions)
+       :board)))
+
+
 
 (def mySize {:x 3 :y 3})
 (def myBoard (board mySize))

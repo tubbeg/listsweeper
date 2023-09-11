@@ -14,31 +14,43 @@
   "coll : contains excepted numbers
    this function could run forever if the
    collection already has all possible positions"
-  [coll xlim ylim]
+  [coll xlim ylim exceptions]
   (loop []
     (let [randPos (generateRandomPosition xlim ylim)]
       (if
-       (not (hasElem coll randPos))
+       (and (not (hasElem coll randPos))
+            (not (hasElem exceptions randPos)))
         randPos
         (recur)))))
 
-(defn generateXuniquePositions [x size]
+(defn generateXuniquePositions [x size exceptions]
   (loop [n x
          l []]
     (if (< n 1)
       l
-      (let [p (generateUniquePosition l (:x size) (:y size))
+      (let [p (generateUniquePosition
+               l (:x size) (:y size) exceptions)
             updatedList (conj l p)
             nextIter (- n 1)]
         (recur nextIter updatedList)))))
 
 
-(defn safeGenerateXuniquePositions [x size]
+(defn _safeGenerateXuniquePositions [x size exceptions]
   (let [xlim (:x size)
         ylim (:y size)
         upperLim (< (+ x 1) (* xlim ylim))
         lowerLim (> x 0)
         numIsValid (and upperLim lowerLim)]
-  (if numIsValid
-    {:numbers (generateXuniquePositions x size)}
-    {:numbers []})))
+    (if numIsValid
+      {:numbers (generateXuniquePositions
+                 x size exceptions)}
+      {:numbers []})))
+
+
+
+
+(defn safeGenerateXuniquePositions
+  ([x size] (_safeGenerateXuniquePositions x size []))
+  ([x size exceptions]
+   (_safeGenerateXuniquePositions x size exceptions)))
+

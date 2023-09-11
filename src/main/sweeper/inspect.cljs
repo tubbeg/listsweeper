@@ -69,7 +69,7 @@
 (defn isHiddenMine [res]
   (= (:ok (:result res)) :mine))
 
-(defn inspectPosition [board pos size] 
+(defn inspectPositionQueue [board pos size] 
   (loop [b board 
          queue [pos]
          ret :none] 
@@ -84,12 +84,20 @@
             (recur (:board res) remainder :mine) 
             (recur (:board res) remainder ret)))))))
 
+(defn inspectPosition
+  [board pos size] (inspectPositionQueue board pos size))
+
 
 (defn markPosition [board pos size]
   (let [c (getPos board pos)]
     (if (isNotFound c)
       {:result {:error "position is invalid!"} :board {}}
       (setPos board pos (toggleMarker c)))))
+
+
+
+(defn hasWon [board]
+  ())
 
 (defn hasHitMine [res]
   (= (:ok (:result res)) :mine))
