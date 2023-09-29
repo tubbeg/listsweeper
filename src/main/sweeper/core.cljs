@@ -2,7 +2,7 @@
   (:require [sweeper.tableView :refer [boardTable
                                        counter]] 
             [sweeper.util :as ht]
-            [sweeper.board :refer [board createBoardWithMines]]
+            [sweeper.board :refer [ createBoardWithMines]]
             [uix.core :refer [use-state defui $]]
             [uix.dom :refer [create-root render-root]]
             [cljs.core :as c]))
@@ -31,14 +31,16 @@
 
 (defui restartGame [{:keys [setC totalMines size
                             setGameState setB]}]
-  ($ :div  {:class "box has-background-dark"
+  ($ :div  {:class "box has-background-dark 
+                    has-text-white"
             :style {:margin-right "86%"
                     :margin-top "1%"
-                    :margin-left "1%"}} 
+                    :margin-left "1%"}}
+     "Left click once to mark a cell. Double-click to inspect it!"
      ($ :button
         {:class "button is-info" 
          :style {:margin-right "82%"
-                 :margin-top "1%"
+                 :margin-top "4%"
                  :margin-left "1%"}
          :on-click #(restartBoard
                      setC size totalMines setB setGameState)}

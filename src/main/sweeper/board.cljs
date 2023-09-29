@@ -1,6 +1,6 @@
 (ns sweeper.board
-  (:require [sweeper.positionGen :refer [hasElem
-                                         safeGenerateXuniquePositions]]))
+  (:require [sweeper.positionGen
+             :refer [safeGenerateXuniquePositions]]))
 
 
 (defn notoutbnds [x y a b]
