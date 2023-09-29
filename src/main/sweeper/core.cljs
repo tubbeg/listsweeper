@@ -3,8 +3,8 @@
                                        counter]] 
             [sweeper.util :as ht]
             [sweeper.board :refer [board createBoardWithMines]]
-            [uix.core :refer [defui $]]
-            [uix.dom]
+            [uix.core :refer [use-state defui $]]
+            [uix.dom :refer [create-root render-root]]
             [cljs.core :as c]))
 
 (def defaultTotalMines 5)
@@ -109,12 +109,12 @@
 
 
 (defui app []
-  (let [[b setB] (uix.core/use-state defaultBoard)
-        [s setS] (uix.core/use-state defaultSize)
-        [c setC] (uix.core/use-state 0)
-        [totalMines setTotalMines] (uix.core/use-state
+  (let [[b setB] (use-state defaultBoard)
+        [s setS] (use-state defaultSize)
+        [c setC] (use-state 0)
+        [totalMines setTotalMines] (use-state
                                     defaultTotalMines)
-        [gameState setGamestate] (uix.core/use-state :init)]
+        [gameState setGamestate] (use-state :init)]
   ;  (println "root gamestate is" gameState)
     ($ :<> 
         ($ boardTable  {:board b
@@ -141,7 +141,7 @@
 (def myElem (ht/createElem "div"))
 (ht/appendElem myElem ht/dBody)
 (defonce root
-  (uix.dom/create-root myElem))
+  (create-root myElem))
 
 (defn initFn []
-  (uix.dom/render-root ($ app) root))
+  (render-root ($ app) root))
