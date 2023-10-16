@@ -17,6 +17,10 @@
      ; note to self: setting index.html js script source
      ; to module can break things during development
      ; use for release only
+
+     ;note2: do not use vite for bundling. Shadow is sufficient
+     ;with advanced optimization
+
      :output-dir "public/js"
      :asset-path "/js"
      :release {:compiler-options {:optimizations :advanced}}

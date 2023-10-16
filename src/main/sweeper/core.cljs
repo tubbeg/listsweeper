@@ -1,6 +1,8 @@
 (ns sweeper.core
   (:require [sweeper.tableView :refer [boardTable
-                                       counter]] 
+                                       counter
+                                       isSmallScreen
+                                       getScreenSize]] 
             [sweeper.util :as ht]
             [sweeper.board :refer [ createBoardWithMines]]
             [uix.core :refer [use-state defui $]]
@@ -33,13 +35,20 @@
                             setGameState setB]}]
   ($ :div  {:class "box has-background-dark 
                     has-text-white"
-            :style {:margin-right "86%"
+            
+            :style {:width (if (isSmallScreen)
+                             "98%"
+                             "600px")
+                    :margin-right "1%" 
                     :margin-top "1%"
                     :margin-left "1%"}}
      "Left click once to mark a cell. Double-click to inspect it!"
      ($ :button
         {:class "button is-info" 
-         :style {:margin-right "82%"
+         :style {:width (if (isSmallScreen)
+                          "96%"
+                          "500px")
+                 :margin-right  "1%"
                  :margin-top "4%"
                  :margin-left "1%"}
          :on-click #(restartBoard
@@ -63,14 +72,26 @@
     (setGameState :init) 
     (setC 0)))
 
+
+(defn getHardSize []
+ (if (isSmallScreen)
+   {:x 9 :y 9}
+   {:x 12 :y 12}))
+
+(defn getHardMines []
+  (if (isSmallScreen)
+    25
+    33))
+
+
 (defn changeToHard [setSize setB setGameState setC setM] 
-  (let [s {:x 12 :y 12}
-       m 33]
-   (setSize s)
-   (setM m)
-   (setB (createBoardWithMines s m))
-   (setGameState :init)
-   (setC 0)))
+  (let [s (getHardSize)
+        m (getHardMines)] 
+    (setSize s)
+    (setM m) 
+    (setB (createBoardWithMines s m))
+    (setGameState :init)
+    (setC 0)))
 
 
 (defn changeToVeryHard [setSize setB setGameState setC setM]
@@ -89,16 +110,19 @@
     "hard" (changeToHard setSize setB setGameState setC setM)
     "very hard" (changeToVeryHard setSize setB setGameState setC setM)
     (changeToDefault setSize setB setGameState setC setM))
-  (println "You have truly changed me :O"))
+  (println "Changed difficulty"))
   ;(println "e is " e)
   ;(println (.. e -target -value)))
 
 (defui selectDifficulty [{:keys [setGameState setSize
                                  setB setC setM]}]
   ($ :div {:class "box has-background-dark"
-           :style {:margin-right "86%"
-                  :margin-top "1%"
-                  :margin-left "1%"}}
+           :style {:width (if (isSmallScreen)
+                            "96%"
+                            "500px")
+                   :margin-right "1%"
+                   :margin-top "1%"
+                   :margin-left "1%"}}
    ($ :div {:class "select"}
      ($ :select {
                  :on-change #(changeDifficulty
@@ -109,6 +133,12 @@
         ($ :option "hard")
         ($ :option "very hard")))))
 
+
+
+(defui widthIs []
+  ($ :div (str "your width is: "
+               (getScreenSize) " "
+               (isSmallScreen))))
 
 (defui app []
   (let [[b setB] (use-state defaultBoard)
@@ -137,12 +167,14 @@
                             :setSize setS
                             :setB setB
                             :setC setC
-                            :setM setTotalMines}))))
+                            :setM setTotalMines})
+       ;($ widthIs)
+        )))
       
 
 (def myElem (ht/createElem "div"))
 (ht/appendElem myElem ht/dBody)
-(defonce root
+(defonce root 
   (create-root myElem))
 
 (defn initFn []

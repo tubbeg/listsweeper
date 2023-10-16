@@ -26,6 +26,18 @@
             [uix.core :refer [defui $]]
             [uix.dom]))
 
+(defn getScreenSize []
+  (. js/screen -width))
+
+;(println "width is: " (getScreenSize))
+
+(defn isSmallScreen []
+  (let [size (getScreenSize)] 
+    (< size 650)))
+
+(println "Is screen small?: " (isSmallScreen))
+
+
 
 (defn matchCellType [cell]
   (let [visible {:c (str " ")
@@ -41,13 +53,14 @@
     (not (isVisible cell)) visible
     (isMine cell) mine
     (isProxy cell) {:c (str (getProxyNum cell))
-                    :s "has-background-light has-text-black"} 
+                    :s "has-background-light
+                         has-text-black"} 
     (isVisible cell) invisible
     :else "has-background-red")))
 
 (defn getWidth [s]
   (let [y (:y s)]
-    (if (> y 0) 
+    (if (> y 0)
       (str (/ 100 y) "%")
       "40px")))
 
@@ -127,7 +140,8 @@
   ($ :td {:key key
           :value row
           :class (str "button is-grey " (:s tpe))
-          :style {:width (getWidth size)}
+          :style {:width (getWidth size)
+                  :length "400px"}
           :on-click
           #(myCallback % gameState setGameState
                        board setBoard size pos
@@ -154,6 +168,32 @@
              :setBoard setBoard
              :totalMines totalMines})))))
 
+(def marginLeft "20%")
+(def marginRight "20%")
+(def mobileMargin "1%")
+
+(defn getTableMarginRight []
+  (if (isSmallScreen)
+    mobileMargin
+    marginRight))
+
+
+(defn getTableMarginLeft []
+  (if (isSmallScreen)
+    mobileMargin
+    marginLeft))
+
+(defn getTableWidth []
+  (if (isSmallScreen)
+    "100%"
+    "400px"))
+
+(defn getBoxWidth []
+  (if (isSmallScreen)
+    "97%"
+    "500px"))
+
+
 (defui boardTable [{:keys [board size gameState
                            setGameState setBoard
                            totalMines]}]
@@ -162,15 +202,17 @@
         cols (->> (range (:y size))
                   (map inc))]
    ($ :div  {:class "box has-background-grey-dark"
-           :style {:margin-left "30%"
-                   :margin-right "40%"
+           :style {
+                   :width (getBoxWidth)
+                   :margin-left (getTableMarginLeft)
+                   :margin-right (getTableMarginRight)
                    :margin-top "1%"}}
      ($ :table 
-        {:width "70%"
+        {:width (getTableWidth)
          :class "table is-bordered"
-                :style {:margin-left "1%"
-                        :margin-right "1%"
-                        :margin-top "1%"}} 
+         :style {:margin-left "1%"
+                 :margin-right "1%"
+                 :margin-top "1%"}} 
         ($ :tbody 
            ($ boardBody
               {:rows rows
@@ -194,7 +236,10 @@
         stle {:class
               "box has-background-dark
                has-text-white"
-              :style {:margin-right "92%"
+              :style {:width (if (isSmallScreen)
+                               "96%"
+                               "600px")
+                      :margin-right  "1%"
                       :margin-top "2%"
                       :margin-left "1%"}}] 
     (uix.core/use-effect 
