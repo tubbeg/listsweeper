@@ -114,15 +114,18 @@
   ;(println "e is " e)
   ;(println (.. e -target -value)))
 
+(def defaultBoxStyle 
+  {:class "box has-background-dark"
+   :style {:width (if (isSmallScreen)
+                    "96%"
+                    "500px")
+           :margin-right "1%"
+           :margin-top "1%"
+           :margin-left "1%"}})
+
 (defui selectDifficulty [{:keys [setGameState setSize
                                  setB setC setM]}]
-  ($ :div {:class "box has-background-dark"
-           :style {:width (if (isSmallScreen)
-                            "96%"
-                            "500px")
-                   :margin-right "1%"
-                   :margin-top "1%"
-                   :margin-left "1%"}}
+  ($ :div defaultBoxStyle
    ($ :div {:class "select"}
      ($ :select {
                  :on-change #(changeDifficulty
@@ -135,10 +138,12 @@
 
 
 
-(defui widthIs []
-  ($ :div (str "your width is: "
-               (getScreenSize) " "
-               (isSmallScreen))))
+(defui divLink []
+  ($ :div defaultBoxStyle
+     ($ :a
+      {:class "tag is-link is-normal"
+       :href "https://github.com/tubbeg/listsweeper"} 
+      "Link to source (github)")))
 
 (defui app []
   (let [[b setB] (use-state defaultBoard)
@@ -168,7 +173,7 @@
                             :setB setB
                             :setC setC
                             :setM setTotalMines})
-       ;($ widthIs)
+       ($ divLink)
         )))
       
 
